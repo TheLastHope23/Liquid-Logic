@@ -5,6 +5,11 @@ import pygame
 # Initialize pygame
 pygame.init()
 
+
+# Load and play background music
+pygame.mixer.music.load('vibe.mp3')
+pygame.mixer.music.play(-1)  # Play the music in a loop
+
 # Initialize game variables
 WIDTH, HEIGHT = 500, 550
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
