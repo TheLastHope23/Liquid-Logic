@@ -11,13 +11,13 @@ pygame.mixer.music.load('vibe.mp3')
 pygame.mixer.music.play(-1)  # Play the music in a loop
 
 # Initialize game variables
-WIDTH, HEIGHT = 500, 550
+WIDTH, HEIGHT = 600, 600
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption('Liquid Logic')
 font = pygame.font.Font('freesansbold.ttf', 24)
 fps = 60
 timer = pygame.time.Clock()
-color_choices = ['red', 'orange', 'light blue', 'dark blue', 'dark green', 'pink', 'purple', 'dark gray', 'brown', 'light green', 'yellow', 'white']
+color_choices = ['red', 'orange', 'light blue', 'dark blue', 'dark green', 'pink', 'purple', 'black', 'brown', 'light green', 'yellow', 'white']
 tube_colors = []
 initial_colors = []
 new_game = True
