@@ -47,6 +47,9 @@ def generate_start():
 # Function to draw the background
 def draw_background():
     screen.fill((30, 30, 30))  # Dark gray background
+    for y in range(HEIGHT):
+        color = 7 + (y * 225 // HEIGHT)
+        pygame.draw.line(screen, (color, color, color), (0, y), (WIDTH, y))
 
 # Function to draw all tubes and colors on the screen
 def draw_tubes(tubes_num, tube_cols):
