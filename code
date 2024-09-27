@@ -2,15 +2,13 @@ import copy
 import random
 import pygame
 
-# Initialize pygame
 pygame.init()
 
 
-# Load and play background music
 pygame.mixer.music.load('vibe.mp3')
-pygame.mixer.music.play(-1)  # Play the music in a loop
+pygame.mixer.music.play(-1)  
 
-# Initialize game variables
+
 WIDTH, HEIGHT = 600, 600
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption('Liquid Logic')
@@ -20,23 +18,23 @@ timer = pygame.time.Clock()
 color_choices = ['red', 'orange', 'light blue', 'dark blue', 'dark green', 'pink', 'purple', 'black', 'brown', 'light green', 'yellow', 'white']
 tube_colors = []
 initial_colors = []
+previous_state = None
 new_game = True
 selected = False
 tube_rects = []
 select_rect = -1
 win = False
 
-# Function to generate a new game setup with random colors
 def generate_start():
-    tubes_number = random.randint(10, 14)
+    tubes_number = random.randint(8, 10)
     tubes_colors = [[] for _ in range(tubes_number)]
     available_colors = []
 
-    for i in range(tubes_number - 2):
+    for i in range(tubes_number - 3):
         for _ in range(4):
             available_colors.append(i)
 
-    for i in range(tubes_number - 2):
+    for i in range(tubes_number - 3):
         for _ in range(4):
             color = random.choice(available_colors)
             tubes_colors[i].append(color)
@@ -44,14 +42,12 @@ def generate_start():
 
     return tubes_number, tubes_colors
 
-# Function to draw the background
 def draw_background():
-    screen.fill((30, 30, 30))  # Dark gray background
+    screen.fill((30, 30, 30))
     for y in range(HEIGHT):
         color = 7 + (y * 225 // HEIGHT)
         pygame.draw.line(screen, (color, color, color), (0, y), (WIDTH, y))
 
-# Function to draw all tubes and colors on the screen
 def draw_tubes(tubes_num, tube_cols):
     tube_boxes = []
     tubes_per_row = (tubes_num + 1) // 2
@@ -75,23 +71,15 @@ def draw_tubes(tubes_num, tube_cols):
 
     return tube_boxes
 
-# Function to determine the move to be made between tubes
+
 def calc_move(colors, selected_rect, destination):
-    chain = True
-    length = 1
+    global previous_state
+    previous_state = copy.deepcopy(colors)
+
     if len(colors[selected_rect]) > 0:
         color_to_move = colors[selected_rect][-1]
-        for i in range(1, len(colors[selected_rect])):
-            if chain:
-                if colors[selected_rect][-1 - i] == color_to_move:
-                    length += 1
-                else:
-                    chain = False
-
         if len(colors[destination]) < 4 and (len(colors[destination]) == 0 or colors[destination][-1] == color_to_move):
-            for _ in range(length):
-                if len(colors[destination]) < 4:
-                    colors[destination].append(colors[selected_rect].pop())
+            colors[destination].append(colors[selected_rect].pop())
 
     return colors
 
@@ -121,10 +109,12 @@ while run:
         if event.type == pygame.QUIT:
             run = False
         if event.type == pygame.KEYUP:
-            if event.key == pygame.K_SPACE:
+            if event.key == pygame.K_SPACE:  # Restart to original state
                 tube_colors = copy.deepcopy(initial_colors)
-            elif event.key == pygame.K_RETURN:
+            elif event.key == pygame.K_RETURN:  # Generate new game
                 new_game = True
+            elif event.key == pygame.K_u and previous_state:  # Undo move
+                tube_colors = copy.deepcopy(previous_state)
         if event.type == pygame.MOUSEBUTTONDOWN:
             for idx, rect in enumerate(tube_rects):
                 if rect.collidepoint(event.pos):
@@ -139,7 +129,7 @@ while run:
     if win:
         victory_text = font.render('You Won! Press Enter for a new board!', True, 'white')
         screen.blit(victory_text, (30, 265))
-    restart_text = font.render('Stuck? Space-Restart, Enter-New Board!', True, 'white')
+    restart_text = font.render('Stuck? Space-Restart, Enter-New Board, U-Undo!', True, 'white')
     screen.blit(restart_text, (10, 10))
 
     pygame.display.flip()
