@@ -16,6 +16,14 @@ font = pygame.font.Font('freesansbold.ttf', 24)
 fps = 60
 timer = pygame.time.Clock()
 
+# Load the main background image for the game
+main_background = pygame.image.load('mainscreen.png')
+main_background = pygame.transform.scale(main_background, (WIDTH, HEIGHT))
+
+# Load the test tube image
+testtube_img = pygame.image.load('testtube.png')
+testtube_img = pygame.transform.scale(testtube_img, (65, 200))
+
 # Define available colors
 color_choices = ['red', 'orange', 'light blue', 'dark blue', 'dark green', 'pink', 'purple', 'black', 'brown',
                  'light green', 'yellow', 'white', 'gray']
@@ -55,11 +63,10 @@ def generate_start():
     return tubes_number, tubes_colors
 
 
+# Function to draw the main game screen with the background
 def draw_background():
-    screen.fill((30, 30, 30))
-    for y in range(HEIGHT):
-        color = 7 + (y * 225 // HEIGHT)
-        pygame.draw.line(screen, (color, color, color), (0, y), (WIDTH, y))
+    # Blit the main background image on the screen (no gradient effect anymore)
+    screen.blit(main_background, (0, 0))
 
 
 def draw_tubes(tubes_num, tube_cols):
@@ -68,21 +75,33 @@ def draw_tubes(tubes_num, tube_cols):
     spacing = WIDTH / tubes_per_row
 
     for i in range(tubes_per_row):
+        # Draw the colors inside the upper row test tube
         for j in range(len(tube_cols[i])):
             pygame.draw.rect(screen, pygame.Color(color_choices[tube_cols[i][j]]),
                              [5 + spacing * i, 200 - (50 * j), 65, 50], 0, 3)
-        box = pygame.draw.rect(screen, (0, 0, 255), [5 + spacing * i, 50, 65, 200], 5, 5)
+
+        # Draw the border on top (white color)
+        tube_rect = pygame.Rect(5 + spacing * i, 50, 65, 200)
+        pygame.draw.rect(screen, (255, 255, 255), tube_rect, 5)  # Gold border
+
+        box = tube_rect  # Save the tube rect for collision detection
         if select_rect == i:
-            pygame.draw.rect(screen, (0, 255, 0), [5 + spacing * i, 50, 65, 200], 3, 5)
+            pygame.draw.rect(screen, (0, 255, 0), tube_rect, 3)  # Green border if selected
         tube_boxes.append(box)
 
     for i in range(tubes_per_row, tubes_num):
+        # Draw the colors inside the lower row test tube
         for j in range(len(tube_cols[i])):
             pygame.draw.rect(screen, pygame.Color(color_choices[tube_cols[i][j]]),
                              [5 + spacing * (i - tubes_per_row), 450 - (50 * j), 65, 50], 0, 3)
-        box = pygame.draw.rect(screen, (0, 0, 255), [5 + spacing * (i - tubes_per_row), 300, 65, 200], 5, 5)
+
+        # Draw the border on top (white color)
+        tube_rect = pygame.Rect(5 + spacing * (i - tubes_per_row), 300, 65, 200)
+        pygame.draw.rect(screen, (255, 255, 255), tube_rect, 5)  # Gold border
+
+        box = tube_rect  # Save the tube rect for collision detection
         if select_rect == i:
-            pygame.draw.rect(screen, (0, 255, 0), [5 + spacing * (i - tubes_per_row), 300, 65, 200], 3, 5)
+            pygame.draw.rect(screen, (0, 255, 0), tube_rect, 3)  # Green border if selected
         tube_boxes.append(box)
 
     return tube_boxes
@@ -151,8 +170,11 @@ def show_menu():
                     exit()  # Quit the game
                 if WIDTH // 2 - mute_text.get_width() // 2 <= mouse_x <= WIDTH // 2 + mute_text.get_width() // 2 and \
                         HEIGHT // 2 + 100 <= mouse_y <= HEIGHT // 2 + 100 + mute_text.get_height():
-                    toggle_music()  # Mute or unmute the music
-
+                    toggle_music()  # Toggle music
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    exit()
 
 # Main game loop
 run = True
@@ -160,7 +182,7 @@ while run:
     if not game_active:
         game_active = show_menu()  # Show the menu and wait for the user to start the game
 
-    draw_background()
+    draw_background()  # Draw the mainscreen.png background image (no gradient)
     timer.tick(fps)
 
     if new_game:
@@ -200,15 +222,13 @@ while run:
         victory_text = font.render('You Won! Press Enter for a new board!', True, 'gray')
         screen.blit(victory_text, (30, 265))
 
-    move_text = font.render(f'Moves: {move_count}/{max_moves}', True, 'gray')
-    screen.blit(move_text, (10, 40))
+    move_text = font.render(f'Moves: {move_count}/{max_moves}', True, 'white')
+    screen.blit(move_text, (10, 10))
 
-    restart_text = font.render('Stuck? Space-Restart, Enter-New Board, U-Undo!', True, 'gray')
-    screen.blit(restart_text, (10, 10))
-
-    if move_count > max_moves:
-        game_over_text = font.render('Out of moves! Press Enter for a new board!', True, 'red')
-        screen.blit(game_over_text, (30, 300))
+    # Check if the player has reached the move limit
+    if move_count >= max_moves and not win:
+        game_over_text = font.render('Game Over! Press Enter to Restart!', True, 'red')
+        screen.blit(game_over_text, (30, 265))
 
     pygame.display.flip()
 
