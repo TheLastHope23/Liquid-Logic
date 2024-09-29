@@ -25,7 +25,7 @@ testtube_img = pygame.image.load('testtube.png')
 testtube_img = pygame.transform.scale(testtube_img, (65, 200))
 
 # Define available colors
-color_choices = ['red', 'orange', 'light blue', 'dark blue', 'dark green', 'pink', 'purple', 'black', 'brown',
+color_choices = ['red', 'orange', 'light blue', 'dark blue', 'dark green', 'pink', 'purple', 'brown',
                  'light green', 'yellow', 'white', 'gray']
 tube_colors = []
 initial_colors = []
@@ -36,7 +36,7 @@ tube_rects = []
 select_rect = -1
 win = False
 move_count = 0
-max_moves = 50  # Limit the number of moves allowed
+max_moves = 35  # Limit the number of moves allowed
 game_active = False  # Track if the game is active or menu is showing
 music_muted = False  # Track whether the music is muted or not
 
@@ -77,27 +77,33 @@ def draw_tubes(tubes_num, tube_cols):
     for i in range(tubes_per_row):
         # Draw the colors inside the upper row test tube
         for j in range(len(tube_cols[i])):
-            pygame.draw.rect(screen, pygame.Color(color_choices[tube_cols[i][j]]),
-                             [5 + spacing * i, 200 - (50 * j), 65, 50], 0, 3)
+            color_rect = [5 + spacing * i, 200 - (50 * j), 65, 50]
+            # Draw the white border for the color
+            pygame.draw.rect(screen, (255, 255, 255), [color_rect[0] - 2, color_rect[1] - 2, color_rect[2] + 4, color_rect[3] + 4])
+            # Draw the actual color
+            pygame.draw.rect(screen, pygame.Color(color_choices[tube_cols[i][j]]), color_rect, 0, 3)
 
         # Draw the border on top (white color)
         tube_rect = pygame.Rect(5 + spacing * i, 50, 65, 200)
-        pygame.draw.rect(screen, (255, 255, 255), tube_rect, 5)  # Gold border
+        pygame.draw.rect(screen, (255, 255, 255), tube_rect, 5)
 
         box = tube_rect  # Save the tube rect for collision detection
         if select_rect == i:
-            pygame.draw.rect(screen, (0, 255, 0), tube_rect, 3)  # Green border if selected
+            pygame.draw.rect(screen, (0, 255, 0), tube_rect, 3)
         tube_boxes.append(box)
 
     for i in range(tubes_per_row, tubes_num):
         # Draw the colors inside the lower row test tube
         for j in range(len(tube_cols[i])):
-            pygame.draw.rect(screen, pygame.Color(color_choices[tube_cols[i][j]]),
-                             [5 + spacing * (i - tubes_per_row), 450 - (50 * j), 65, 50], 0, 3)
+            color_rect = [5 + spacing * (i - tubes_per_row), 450 - (50 * j), 65, 50]
+            # Draw the white border for the color
+            pygame.draw.rect(screen, (255, 255, 255), [color_rect[0] - 2, color_rect[1] - 2, color_rect[2] + 4, color_rect[3] + 4])
+            # Draw the actual color
+            pygame.draw.rect(screen, pygame.Color(color_choices[tube_cols[i][j]]), color_rect, 0, 3)
 
         # Draw the border on top (white color)
         tube_rect = pygame.Rect(5 + spacing * (i - tubes_per_row), 300, 65, 200)
-        pygame.draw.rect(screen, (255, 255, 255), tube_rect, 5)  # Gold border
+        pygame.draw.rect(screen, (255, 255, 255), tube_rect, 5)
 
         box = tube_rect  # Save the tube rect for collision detection
         if select_rect == i:
@@ -233,3 +239,4 @@ while run:
     pygame.display.flip()
 
 pygame.quit()
+
