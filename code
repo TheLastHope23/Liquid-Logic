@@ -1,6 +1,7 @@
 import copy
 import random
 import pygame
+import sys
 
 pygame.init()
 
@@ -20,13 +21,10 @@ timer = pygame.time.Clock()
 main_background = pygame.image.load('mainscreen.png')
 main_background = pygame.transform.scale(main_background, (WIDTH, HEIGHT))
 
-# Load the test tube image
-testtube_img = pygame.image.load('testtube.png')
-testtube_img = pygame.transform.scale(testtube_img, (65, 200))
-
 # Define available colors
 color_choices = ['red', 'orange', 'light blue', 'dark blue', 'dark green', 'pink', 'purple', 'brown',
-                 'light green', 'yellow', 'white', 'gray']
+                'light green', 'yellow', 'white', 'gray']
+
 tube_colors = []
 initial_colors = []
 previous_state = None
@@ -36,7 +34,7 @@ tube_rects = []
 select_rect = -1
 win = False
 move_count = 0
-max_moves = 35  # Limit the number of moves allowed
+max_moves = 30  # Limit the number of moves allowed
 game_active = False  # Track if the game is active or menu is showing
 music_muted = False  # Track whether the music is muted or not
 
@@ -50,6 +48,7 @@ def generate_start():
     tubes_colors = [[] for _ in range(tubes_number)]
     available_colors = []
 
+    # Assign colors to tubes
     for i in range(tubes_number - 2):  # Now only 2 empty tubes to make it harder
         for _ in range(4):
             available_colors.append(i)
@@ -79,7 +78,8 @@ def draw_tubes(tubes_num, tube_cols):
         for j in range(len(tube_cols[i])):
             color_rect = [5 + spacing * i, 200 - (50 * j), 65, 50]
             # Draw the white border for the color
-            pygame.draw.rect(screen, (255, 255, 255), [color_rect[0] - 2, color_rect[1] - 2, color_rect[2] + 4, color_rect[3] + 4])
+            pygame.draw.rect(screen, (255, 255, 255), [color_rect[0] - 2, color_rect[1] - 2,
+                                                        color_rect[2] + 4, color_rect[3] + 4])
             # Draw the actual color
             pygame.draw.rect(screen, pygame.Color(color_choices[tube_cols[i][j]]), color_rect, 0, 3)
 
@@ -89,7 +89,7 @@ def draw_tubes(tubes_num, tube_cols):
 
         box = tube_rect  # Save the tube rect for collision detection
         if select_rect == i:
-            pygame.draw.rect(screen, (0, 255, 0), tube_rect, 3)
+            pygame.draw.rect(screen, (0, 255, 0), tube_rect, 3)  # Green border if selected
         tube_boxes.append(box)
 
     for i in range(tubes_per_row, tubes_num):
@@ -97,7 +97,8 @@ def draw_tubes(tubes_num, tube_cols):
         for j in range(len(tube_cols[i])):
             color_rect = [5 + spacing * (i - tubes_per_row), 450 - (50 * j), 65, 50]
             # Draw the white border for the color
-            pygame.draw.rect(screen, (255, 255, 255), [color_rect[0] - 2, color_rect[1] - 2, color_rect[2] + 4, color_rect[3] + 4])
+            pygame.draw.rect(screen, (255, 255, 255), [color_rect[0] - 2, color_rect[1] - 2,
+                                                        color_rect[2] + 4, color_rect[3] + 4])
             # Draw the actual color
             pygame.draw.rect(screen, pygame.Color(color_choices[tube_cols[i][j]]), color_rect, 0, 3)
 
@@ -115,11 +116,12 @@ def draw_tubes(tubes_num, tube_cols):
 
 def calc_move(colors, selected_rect, destination):
     global previous_state, move_count
-    previous_state = copy.deepcopy(colors)
-
+    # Check if a valid move can be made
     if len(colors[selected_rect]) > 0:
         color_to_move = colors[selected_rect][-1]
         if len(colors[destination]) < 4 and (len(colors[destination]) == 0 or colors[destination][-1] == color_to_move):
+            # Save the current state before making the move
+            previous_state = copy.deepcopy(colors)
             colors[destination].append(colors[selected_rect].pop())
             move_count += 1  # Increment move count
     return colors
@@ -148,13 +150,24 @@ def show_menu():
     # Display the background image
     screen.blit(menu_background, (0, 0))
 
-    start_text = font.render("Start Game", True, 'black')
-    quit_text = font.render("Quit", True, 'red')
+    start_text = font.render("Start Game", True, 'white')
+    quit_text = font.render("Quit", True, 'white')
     mute_text = font.render("Mute" if not music_muted else "Unmute", True, 'white')
 
-    screen.blit(start_text, (WIDTH // 2 - start_text.get_width() // 2, HEIGHT // 2))
-    screen.blit(quit_text, (WIDTH // 2 - quit_text.get_width() // 2, HEIGHT // 2 + 50))
-    screen.blit(mute_text, (WIDTH // 2 - mute_text.get_width() // 2, HEIGHT // 2 + 100))
+    # Calculate positions of the text to center them
+    start_rect = pygame.Rect(WIDTH // 2 - start_text.get_width() // 2, HEIGHT // 2, start_text.get_width(), start_text.get_height())
+    quit_rect = pygame.Rect(WIDTH // 2 - quit_text.get_width() // 2, HEIGHT // 2 + 50, quit_text.get_width(), quit_text.get_height())
+    mute_rect = pygame.Rect(WIDTH // 2 - mute_text.get_width() // 2, HEIGHT // 2 + 100, mute_text.get_width(), mute_text.get_height())
+
+    # Draw white borders around the text (rectangles around each button)
+    pygame.draw.rect(screen, (0, 0, 0), start_rect.inflate(10, 10), 20)  # Add white border around "Start Game"
+    pygame.draw.rect(screen, (0, 0, 0), quit_rect.inflate(10, 10), 20)   # Add white border around "Quit"
+    pygame.draw.rect(screen, (0, 0, 0), mute_rect.inflate(10, 10), 20)   # Add white border around "Mute"
+
+    # Draw the actual text inside the white-bordered rectangles
+    screen.blit(start_text, start_rect.topleft)
+    screen.blit(quit_text, quit_rect.topleft)
+    screen.blit(mute_text, mute_rect.topleft)
 
     pygame.display.flip()
 
@@ -164,23 +177,21 @@ def show_menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
+                sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = event.pos
-                if WIDTH // 2 - start_text.get_width() // 2 <= mouse_x <= WIDTH // 2 + start_text.get_width() // 2 and \
-                        HEIGHT // 2 <= mouse_y <= HEIGHT // 2 + start_text.get_height():
+                if start_rect.collidepoint(mouse_x, mouse_y):
                     return True  # Start the game
-                if WIDTH // 2 - quit_text.get_width() // 2 <= mouse_x <= WIDTH // 2 + quit_text.get_width() // 2 and \
-                        HEIGHT // 2 + 50 <= mouse_y <= HEIGHT // 2 + 50 + quit_text.get_height():
+                if quit_rect.collidepoint(mouse_x, mouse_y):
                     pygame.quit()
-                    exit()  # Quit the game
-                if WIDTH // 2 - mute_text.get_width() // 2 <= mouse_x <= WIDTH // 2 + mute_text.get_width() // 2 and \
-                        HEIGHT // 2 + 100 <= mouse_y <= HEIGHT // 2 + 100 + mute_text.get_height():
+                    sys.exit()  # Quit the game
+                if mute_rect.collidepoint(mouse_x, mouse_y):
                     toggle_music()  # Toggle music
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
-                    exit()
+                    sys.exit()
+
 
 # Main game loop
 run = True
@@ -192,12 +203,13 @@ while run:
     timer.tick(fps)
 
     if new_game:
-        tubes, tube_colors = generate_start()
+        tubes_num, tube_colors = generate_start()
         initial_colors = copy.deepcopy(tube_colors)
         new_game = False
         move_count = 0  # Reset the move counter
+        previous_state = None  # Reset previous state
     else:
-        tube_rects = draw_tubes(tubes, tube_colors)
+        tube_rects = draw_tubes(tubes_num, tube_colors)
 
     win = check_victory(tube_colors)
 
@@ -205,38 +217,55 @@ while run:
         if event.type == pygame.QUIT:
             run = False
         if event.type == pygame.KEYUP:
-            if event.key == pygame.K_SPACE:  # Restart to original state
-                tube_colors = copy.deepcopy(initial_colors)
-                move_count = 0  # Reset move counter
-            elif event.key == pygame.K_RETURN:  # Generate new game
-                new_game = True
-            elif event.key == pygame.K_u and previous_state:  # Undo move
-                tube_colors = copy.deepcopy(previous_state)
-                move_count -= 1  # Decrease move count on undo
-        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.key == pygame.K_r:
+                tube_colors = copy.deepcopy(initial_colors)  # Restart game
+                move_count = 0
+                previous_state = None  # Reset previous state
+            elif event.key == pygame.K_u:
+                if previous_state is not None:
+                    tube_colors = copy.deepcopy(previous_state)  # Undo the last move
+                    move_count = max(move_count - 1, 0)  # Decrease move count but not below 0
+                    previous_state = None  # Prevent multiple undos
+        if event.type == pygame.MOUSEBUTTONDOWN and not win and move_count < max_moves:
             for idx, rect in enumerate(tube_rects):
                 if rect.collidepoint(event.pos):
                     if not selected:
                         selected = True
                         select_rect = idx
                     else:
-                        tube_colors = calc_move(tube_colors, select_rect, idx)
+                        if select_rect != idx:
+                            tube_colors = calc_move(tube_colors, select_rect, idx)
                         selected = False
                         select_rect = -1
 
     if win:
-        victory_text = font.render('You Won! Press Enter for a new board!', True, 'gray')
-        screen.blit(victory_text, (30, 265))
+        victory_text = font.render('You Won! Press Enter to Replay!', True, 'white')
+        screen.blit(victory_text, (WIDTH // 2 - victory_text.get_width() // 2, HEIGHT // 2 - 50))
+    elif move_count >= max_moves:
+        game_over_text = font.render('Game Over! Press Enter to Replay!', True, 'white')
+        screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2 - 50))
 
-    move_text = font.render(f'Moves: {move_count}/{max_moves}', True, 'white')
+    # Display move count
+    move_text = font.render(f"Moves: {move_count}/{max_moves}", True, 'white')
     screen.blit(move_text, (10, 10))
-
-    # Check if the player has reached the move limit
-    if move_count >= max_moves and not win:
-        game_over_text = font.render('Game Over! Press Enter to Restart!', True, 'red')
-        screen.blit(game_over_text, (30, 265))
 
     pygame.display.flip()
 
-pygame.quit()
+    # Handle replay after game over or win
+    if win or move_count >= max_moves:
+        waiting_for_replay = True
+        while waiting_for_replay:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        new_game = True  # Trigger new game
+                        waiting_for_replay = False
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
+            pygame.time.wait(100)  # Small delay to prevent high CPU usage
 
+pygame.quit()
